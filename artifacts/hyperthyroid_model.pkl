@@ -1,0 +1,56 @@
+import pandas as pd
+import numpy as np
+from sklearn.model_selection import train_test_split, learning_curve
+from sklearn.tree import DecisionTreeClassifier
+import joblib
+import matplotlib.pyplot as plt
+
+# Load dataset
+df = pd.read_csv("hyperthyroidism3_FinalDataSet_April.csv", encoding='latin-1')
+df.dropna(inplace=True)
+
+# Prepare data
+X = df.iloc[:, 1:].values
+y = df.iloc[:, 0].values  
+
+# Train-test split
+X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
+
+# Train decision tree classifier
+decision_tree = DecisionTreeClassifier()
+decision_tree.fit(X_train, y_train)
+
+# Evaluate model
+y_pred = decision_tree.predict(X_test)
+print("Accuracy = ", accuracy_score(y_test, y_pred) * 100, "%")
+print("Precision = ", precision_score(y_test, y_pred,average='macro'))
+print("Recall = ", recall_score(y_test, y_pred,average='macro'))
+print("F1-score = ", f1_score(y_test, y_pred,average='macro'))
+
+# Confusion matrix
+conf_matrix = confusion_matrix(y_test, y_pred)
+disp = ConfusionMatrixDisplay(confusion_matrix=conf_matrix, display_labels=np.unique(y))
+disp.plot()
+plt.title('Confusion Matrix for DT Classifier')
+plt.show()
+
+# Classification report
+print("Classification Report")
+print(classification_report(y_test, y_pred))
+
+# Generate learning curve
+train_sizes, train_scores, test_scores = learning_curve(decision_tree, X, y, cv=5, train_sizes=np.linspace(0.1, 1.0, 10))
+
+# Plot learning curve
+plt.figure()
+plt.plot(train_sizes, np.mean(train_scores, axis=1), 'o-', label="Training score")
+plt.plot(train_sizes, np.mean(test_scores, axis=1), 'o-', label="Cross-validation score")
+plt.xlabel("Training examples")
+plt.ylabel("Score")
+plt.title("Learning Curve")
+plt.legend(loc="best")
+plt.show()
+
+# Save trained model
+joblib.dump(decision_tree, 'hyperthyroid_model.pkl')
+
